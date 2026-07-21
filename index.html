@@ -3,1301 +3,956 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard | Dictámenes Jurídicos</title>
-    
-    <!-- Fuentes Google: Syne & DM Mono -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Syne:wght@400..800&display=swap" rel="stylesheet">
-    
-    <!-- Chart.js & Plugin de DataLabels para etiquetas de valores -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <title>Dictaminación con IA - v1 Piloto</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js & Datalabels plugin -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
-
+    
     <style>
-        /* ================= VARIABLES ================= */
         :root {
             --bg-base: #0b0e17;
             --bg-card: #111520;
-            --bg-card-hover: #161c2b;
-            --border: #1e2540;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            
-            --accent-1: #6366f1; /* Indigo */
-            --accent-2: #8b5cf6; /* Violet */
-            --accent-3: #14b8a6; /* Teal */
-            --accent-4: #f43f5e; /* Rose */
-            --accent-5: #f59e0b; /* Amber */
-            
-            --status-baja: #10b981;
-            --status-media: #f59e0b;
-            --status-alta: #ef4444;
-
-            --font-title: 'Syne', sans-serif;
-            --font-data: 'DM Mono', monospace;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --border-color: #272c3d;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --tradicional: #10b981;
+            --ia: #f59e0b;
+            --finalizado: #97b10b;
+            --danger: #ef4444;
+            --font-head: 'Syne', sans-serif;
+            --font-mono: 'DM Mono', monospace;
         }
 
-        /* ================= RESET & BASE ================= */
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        
+
         body {
             background-color: var(--bg-base);
             color: var(--text-main);
-            font-family: var(--font-data);
+            font-family: var(--font-head);
             min-height: 100vh;
-            overflow-x: hidden;
-            background-image: 
-                linear-gradient(to right, rgba(255,255,255,0.02) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-image: linear-gradient(var(--border-color) 1px, transparent 1px), linear-gradient(90deg, var(--border-color) 1px, transparent 1px);
             background-size: 50px 50px;
+            background-position: -1px -1px;
+            overflow-x: hidden;
         }
 
-        h1, h2, h3, h4, h5, h6, .kpi-value, .label {
-            font-family: var(--font-title);
-        }
+        .container { max-width: 1600px; margin: 0 auto; padding: 20px; }
 
-        /* ================= LAYOUT ================= */
-        .container {
-            max-width: 1600px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
-
-        /* Header */
         header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+            background-color: var(--bg-card); padding: 20px; border-radius: 12px;
+            border: 1px solid var(--border-color); margin-bottom: 20px; flex-wrap: wrap; gap: 15px;
         }
         
-        header h1 {
-            font-size: 2rem;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-            background: linear-gradient(to right, #fff, #94a3b8);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        header h1 { font-weight: 700; font-size: 1.5rem; letter-spacing: -0.5px; }
+        header p { color: var(--text-muted); font-size: 0.9rem; margin-top: 5px; font-weight: 500; }
+
+        .header-actions { display: flex; flex-direction: column; gap: 10px; }
+        .btn-group { display: flex; gap: 10px; }
+
+        .btn {
+            background-color: var(--primary); color: white; border: none;
+            padding: 8px 16px; border-radius: 6px; cursor: pointer;
+            font-family: var(--font-head); font-weight: 600; font-size: 0.9rem;
+            transition: background 0.2s; display: flex; align-items: center; gap: 8px; justify-content: center;
+        }
+        .btn:hover { background-color: var(--primary-hover); }
+        .btn-green { background-color: #10b981; }
+        .btn-green:hover { background-color: #059669; }
+        .btn-outline { background: transparent; border: 1px solid var(--border-color); color: var(--text-main); }
+        .btn-outline:hover { background: rgba(255,255,255,0.05); }
+
+        .url-input {
+            background: var(--bg-base); border: 1px solid var(--border-color); color: var(--text-main);
+            padding: 8px 12px; border-radius: 6px; font-family: var(--font-mono); font-size: 0.8rem; width: 100%; outline: none;
         }
 
-        /* Botón Upload */
-        .btn-upload {
-            background: rgba(99, 102, 241, 0.1);
-            color: var(--accent-1);
-            border: 1px solid rgba(99, 102, 241, 0.3);
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
-            font-family: var(--font-title);
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
+        #drop-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(11, 14, 23, 0.9); border: 4px dashed var(--primary);
+            display: none; justify-content: center; align-items: center;
+            z-index: 9999; flex-direction: column; gap: 20px;
         }
-        .btn-upload:hover {
-            background: var(--accent-1);
-            color: #fff;
-            box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
-        }
-        input[type="file"] { display: none; }
+        #drop-overlay.active { display: flex; }
+        #drop-overlay h2 { font-size: 2.5rem; color: var(--primary); }
 
-        /* ================= FILTROS ================= */
         .filters-section {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
+            background-color: var(--bg-card); padding: 20px; border-radius: 12px;
+            border: 1px solid var(--border-color); margin-bottom: 20px;
         }
         
-        .filters-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1rem;
-        }
+        .filters-header { display: flex; justify-content: flex-end; margin-bottom: 15px; }
+        .filters-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; }
 
-        .filter-group { display: flex; flex-direction: column; gap: 0.5rem; }
-        
-        .filter-group label {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+        .custom-select { position: relative; user-select: none; }
+        .select-btn {
+            background: var(--bg-base); border: 1px solid var(--border-color);
+            padding: 10px; border-radius: 6px; width: 100%; text-align: left;
+            color: var(--text-main); cursor: pointer; font-family: var(--font-mono); font-size: 0.85rem;
             display: flex; justify-content: space-between; align-items: center;
         }
-        
-        .filter-group label span {
-            font-size: 0.7rem; color: rgba(255,255,255,0.3); text-transform: none;
-        }
-
-        /* --- Custom Multi-Select Dropdown --- */
-        .custom-select {
-            position: relative;
-            width: 100%;
-            font-family: var(--font-data);
-        }
-        
-        .select-trigger {
-            background: var(--bg-base);
-            border: 1px solid var(--border);
-            color: var(--text-main);
-            font-size: 0.85rem;
-            padding: 0.65rem 1rem;
-            border-radius: 6px;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: border-color 0.2s;
-            user-select: none;
-        }
-        .select-trigger:hover { border-color: var(--accent-1); }
-        .select-trigger::after {
-            content: "";
-            width: 12px; height: 12px;
-            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2394a3b8%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
-            background-size: contain;
-            background-repeat: no-repeat;
-            opacity: 0.7;
-        }
-
-        .select-options {
-            position: absolute;
-            top: calc(100% + 5px);
-            left: 0; right: 0;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            z-index: 100;
-            max-height: 220px;
-            overflow-y: auto;
+        .select-btn::after { content: "▼"; font-size: 0.7em; }
+        .select-dropdown {
+            position: absolute; top: 100%; left: 0; width: 100%; background: var(--bg-card);
+            border: 1px solid var(--border-color); border-radius: 6px; margin-top: 5px;
+            max-height: 200px; overflow-y: auto; z-index: 100; display: none;
             box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            display: none;
-            flex-direction: column;
         }
-        .select-options.open { display: flex; }
-        
-        .option-label {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.6rem 1rem;
-            cursor: pointer;
-            border-bottom: 1px solid rgba(255,255,255,0.02);
-            font-size: 0.8rem;
-            transition: background 0.2s;
+        .custom-select.open .select-dropdown { display: block; }
+        .select-option {
+            padding: 8px 12px; display: flex; justify-content: space-between; align-items: center;
+            cursor: pointer; font-family: var(--font-mono); font-size: 0.85rem; transition: background 0.2s;
         }
-        .option-label:hover { background: rgba(255,255,255,0.05); }
-        .option-label span { flex: 1; padding-right: 1rem; }
-        .option-label input[type="checkbox"] {
-            cursor: pointer;
-            width: 16px; height: 16px;
-            accent-color: var(--accent-1);
-        }
+        .select-option:hover { background: var(--bg-base); }
+        .select-option input[type="checkbox"] { cursor: pointer; accent-color: var(--primary); }
 
-        .filters-actions {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 1rem;
-            flex-wrap: wrap;
-            margin-top: 1rem;
+        .gestion-checkbox-group {
+            grid-column: 1 / -1; background: var(--bg-base); padding: 10px 15px; border-radius: 6px;
+            border: 1px solid var(--border-color); display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
         }
+        .gestion-checkbox-group span { font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; }
+        .gestion-checkbox-group label { display: flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 0.9rem; cursor: pointer; }
 
-        .active-chips {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            flex: 1;
-        }
-
+        .chips-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px; }
         .chip {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid var(--border);
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            animation: fadeIn 0.3s ease;
+            background: var(--bg-base); border: 1px solid var(--primary); color: var(--text-main);
+            padding: 4px 10px; border-radius: 15px; font-size: 0.8rem; font-family: var(--font-mono); display: flex; align-items: center; gap: 5px;
         }
-        .chip span { color: var(--accent-3); font-weight: bold; }
-        .chip button {
-            background: none; border: none; color: var(--text-muted);
-            cursor: pointer; font-size: 1rem; line-height: 1;
-        }
-        .chip button:hover { color: var(--text-main); }
+        .chip span { cursor: pointer; color: var(--danger); font-weight: bold; }
 
-        .btn-reset {
-            background: transparent; color: var(--text-muted);
-            border: 1px dashed var(--border); padding: 0.5rem 1rem;
-            border-radius: 6px; cursor: pointer; font-family: var(--font-title);
-            transition: all 0.2s;
-        }
-        .btn-reset:hover { border-color: var(--text-main); color: var(--text-main); }
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 20px; }
+        .kpi-card { background-color: var(--bg-card); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); }
+        .kpi-card h3 { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+        .kpi-card .value { font-size: 2rem; font-weight: 700; margin-bottom: 5px; }
+        .kpi-card .sub-value { font-size: 0.85rem; font-family: var(--font-mono); color: var(--text-muted); }
+        .kpi-card .sub-value.green { color: #10b981; }
+        .kpi-card .sub-value.red { color: #ef4444; }
+        .kpi-list { list-style: none; padding: 0; font-family: var(--font-mono); font-size: 0.85rem; }
+        .kpi-list li { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed var(--border-color); }
+        .kpi-list li:last-child { border-bottom: none; }
 
-        /* ================= KPIs ================= */
-        .kpi-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
+        .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+        .chart-card { background-color: var(--bg-card); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); }
+        .chart-card.full-width { grid-column: 1 / -1; height: 320px; } 
+        .chart-card.half-width { grid-column: span 1; height: 280px; } 
+        .chart-container { position: relative; height: calc(100% - 30px); width: 100%; }
+        .chart-card h3 { font-size: 1rem; margin-bottom: 10px; color: var(--text-main); }
 
-        .kpi-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.5rem;
-            position: relative;
-            overflow: hidden;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            animation: fadeUp 0.6s ease backwards;
-            display: flex;
-            flex-direction: column;
-        }
-        .kpi-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-            background: var(--bg-card-hover);
-        }
-        .kpi-card::before {
-            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px;
-        }
+        .table-section { background-color: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); overflow: hidden; display: flex; flex-direction: column; }
+        .table-title { padding: 20px 20px 0 20px; }
+        .table-title h3 { margin: 0; font-size: 1.25rem; font-weight: 600; color: var(--text-main); }
+        .table-header-tools { padding: 15px 20px; display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); align-items: center; gap: 15px; flex-wrap: wrap; }
+        .table-controls { display: flex; align-items: center; gap: 15px; font-family: var(--font-mono); font-size: 0.85rem; }
         
-        .kpi-card:nth-child(1) { animation-delay: 0.1s; } .kpi-card:nth-child(1)::before { background: var(--accent-1); }
-        .kpi-card:nth-child(2) { animation-delay: 0.2s; } .kpi-card:nth-child(2)::before { background: var(--accent-2); }
-        .kpi-card:nth-child(3) { animation-delay: 0.3s; } .kpi-card:nth-child(3)::before { background: var(--accent-3); }
-        .kpi-card:nth-child(4) { animation-delay: 0.4s; } .kpi-card:nth-child(4)::before { background: var(--accent-4); }
-
-        .kpi-title { font-size: 0.95rem; color: var(--text-muted); margin-bottom: 1rem; font-weight: 600; text-transform: uppercase; }
-        .kpi-value { font-size: 2.2rem; font-weight: 700; color: #fff; }
-        .kpi-sub { font-size: 0.8rem; color: var(--text-muted); margin-top: auto; padding-top: 0.5rem; font-family: var(--font-data); }
-
-        .kpi-list { display: flex; flex-direction: column; gap: 0.5rem; }
-        .kpi-list-item { 
-            display: flex; justify-content: space-between; align-items: center; 
-            border-bottom: 1px dashed rgba(255,255,255,0.05); padding-bottom: 0.4rem; font-size: 1rem; 
-        }
-        .kpi-list-item:last-child { border-bottom: none; padding-bottom: 0; }
-        .kpi-list-item span { color: var(--text-muted); font-size: 0.85rem; font-family: var(--font-data); }
-        .kpi-list-item strong { color: #fff; font-family: var(--font-title); font-size: 1.1rem;}
-
-        /* ================= GRÁFICAS ================= */
-        .charts-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr); /* 3 columnas para la fila inferior */
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
+        .search-box { background: var(--bg-base); border: 1px solid var(--border-color); color: white; padding: 8px 12px; border-radius: 6px; font-family: var(--font-mono); width: 250px; outline: none; }
+        .page-select { background: var(--bg-base); border: 1px solid var(--border-color); color: white; padding: 5px; border-radius: 4px; outline: none; font-family: var(--font-mono); }
         
-        .chart-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.5rem;
-            position: relative;
-            animation: fadeUp 0.8s ease backwards;
-        }
-        .chart-card.full-width {
-            grid-column: 1 / -1; /* Ocupar todo el ancho disponible */
-        }
+        .table-wrapper { overflow-x: auto; max-height: 600px; }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-family: var(--font-mono); font-size: 0.85rem; }
+        thead th { position: sticky; top: 0; background-color: var(--bg-base); padding: 12px 15px; font-family: var(--font-head); font-weight: 600; cursor: pointer; user-select: none; border-bottom: 2px solid var(--border-color); z-index: 10; white-space: nowrap; }
+        thead th:hover { background-color: #1a1e2b; }
+        tbody td { padding: 10px 15px; border-bottom: 1px solid var(--border-color); }
+        tbody tr:hover { background-color: rgba(255,255,255,0.02); }
         
-        @media (max-width: 1200px) { .charts-grid { grid-template-columns: repeat(2, 1fr); } }
-        @media (max-width: 900px) { .charts-grid { grid-template-columns: 1fr; } }
-
-        .chart-title {
-            font-size: 1.1rem; margin-bottom: 1rem; color: #fff;
-            padding-bottom: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.05);
-        }
-        .chart-container { position: relative; height: 150px; width: 100%; }
-        .chart-container.large { height: 300px; } /* Altura doble para la gráfica principal */
-
-        /* ================= TABLA ================= */
-        .table-section {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.5rem;
-            animation: fadeUp 1s ease backwards;
-        }
-
-        .table-header {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;
-        }
-
-        .search-box {
-            background: var(--bg-base); border: 1px solid var(--border);
-            color: var(--text-main); font-family: var(--font-data);
-            padding: 0.5rem 1rem; border-radius: 6px; width: 300px;
-            outline: none;
-        }
-        .search-box:focus { border-color: var(--accent-3); }
-
-        .table-container {
-            overflow-x: auto;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-        }
-
-        table { width: 100%; min-width: 1200px; border-collapse: collapse; text-align: left; }
+        .col-nowrap { white-space: nowrap; }
+        .col-multiline { white-space: pre-wrap; word-break: break-word; min-width: 250px; max-width: 400px; }
         
-        th, td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
-        
-        th {
-            background: rgba(255,255,255,0.02); color: var(--text-muted);
-            font-family: var(--font-title); font-weight: 600;
-            cursor: pointer; user-select: none; white-space: nowrap;
-            position: sticky; top: 0; z-index: 10;
-        }
-        th:hover { background: rgba(255,255,255,0.05); color: #fff; }
-        
-        td.nowrap { white-space: nowrap; }
-        td.wrap-text { white-space: pre-wrap; word-break: break-word; min-width: 200px; }
+        tr.row-finalizado { background-color: var(--finalizado) !important; color: white !important; }
+        tr.row-finalizado td { border-bottom-color: rgba(255,255,255,0.2); }
+        tr.row-finalizado .btn-small { background: rgba(255,255,255,0.2); color: white; border: 1px solid white; }
+        tr.row-finalizado .btn-small:hover { background: rgba(255,255,255,0.4); }
 
-        tbody tr:hover { background: rgba(255,255,255,0.02); }
+        .btn-small { background: var(--bg-base); border: 1px solid var(--border-color); color: var(--text-main); padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; white-space: nowrap; }
+        .btn-small:hover { background: #2a2f42; }
 
-        /* Fila destacada FINALIZADO */
-        tr.row-finalizado {
-            background-color: #67ae3e !important;
-            color: #ffffff !important;
-        }
-        tr.row-finalizado td {
-            color: #ffffff !important;
-            border-bottom-color: rgba(255,255,255,0.2) !important;
-        }
-        tr.row-finalizado .badge {
-            background: rgba(255,255,255,0.2) !important;
-            border-color: rgba(255,255,255,0.4) !important;
-            color: #ffffff !important;
-        }
-        tr.row-finalizado .table-link {
-            color: #ffffff !important;
-            border-bottom-color: #ffffff !important;
-            font-weight: bold;
-        }
-        tr.row-finalizado .btn-modal {
-            background: rgba(255,255,255,0.2) !important;
-            color: #ffffff !important;
-            border-color: #ffffff !important;
-        }
-        tr.row-finalizado .btn-modal:hover {
-            background: #ffffff !important;
-            color: #67ae3e !important;
-        }
+        .pagination-container { display: flex; justify-content: center; align-items: center; gap: 10px; padding: 15px; border-top: 1px solid var(--border-color); font-family: var(--font-mono); font-size: 0.85rem; }
+        .page-btn { background: var(--bg-base); border: 1px solid var(--border-color); color: var(--text-main); padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+        .page-btn:hover { background: #2a2f42; }
+        .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        .table-link {
-            color: var(--accent-1); text-decoration: none; border-bottom: 1px dashed var(--accent-1);
-        }
-        .table-link:hover { color: #fff; border-bottom-color: #fff; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background: var(--bg-card); padding: 25px; border-radius: 12px; border: 1px solid var(--border-color); width: 90%; max-width: 500px; position: relative; }
+        .modal-close { position: absolute; top: 15px; right: 15px; background: none; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer; }
+        .modal-title { margin-bottom: 15px; font-weight: 600; }
+        .modal-body { font-family: var(--font-mono); font-size: 0.9rem; line-height: 1.5; white-space: pre-wrap; }
 
-        .badge {
-            padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold;
+        @media (max-width: 1024px) {
+            .charts-grid { grid-template-columns: 1fr; }
+            .chart-card.half-width { grid-column: 1 / -1; height: 300px; }
         }
-        .badge-alta { background: rgba(239, 68, 68, 0.2); color: var(--status-alta); border: 1px solid rgba(239, 68, 68, 0.3); }
-        .badge-media { background: rgba(245, 158, 11, 0.2); color: var(--status-media); border: 1px solid rgba(245, 158, 11, 0.3); }
-        .badge-baja { background: rgba(16, 185, 129, 0.2); color: var(--status-baja); border: 1px solid rgba(16, 185, 129, 0.3); }
-        .badge-default { background: rgba(255,255,255,0.1); color: #ccc; }
-
-        .btn-modal {
-            background: rgba(20, 184, 166, 0.1); color: var(--accent-3); 
-            border: 1px solid rgba(20, 184, 166, 0.3); padding: 0.4rem 0.8rem; 
-            border-radius: 6px; cursor: pointer; font-family: var(--font-data); 
-            font-size: 0.75rem; transition: all 0.2s; white-space: nowrap;
-        }
-        .btn-modal:hover { background: var(--accent-3); color: #fff; }
-
-        .table-footer {
-            margin-top: 1rem; display: flex; justify-content: space-between;
-            font-size: 0.85rem; color: var(--text-muted);
-        }
-
-        /* ================= MODAL ================= */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(11, 14, 23, 0.8); backdrop-filter: blur(5px);
-            z-index: 10000; display: flex; justify-content: center; align-items: center;
-            opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
-        }
-        .modal-overlay.active { opacity: 1; pointer-events: all; }
-        
-        .modal-content {
-            background: var(--bg-card); border: 1px solid var(--border);
-            border-radius: 12px; width: 90%; max-width: 600px;
-            padding: 2rem; transform: translateY(-20px); transition: transform 0.3s ease;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-        }
-        .modal-overlay.active .modal-content { transform: translateY(0); }
-        
-        .modal-header { 
-            display: flex; justify-content: space-between; align-items: center; 
-            margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border);
-        }
-        .modal-header h4 { font-size: 1.3rem; margin: 0; color: #fff; }
-        .modal-close { 
-            background: none; border: none; color: var(--text-muted); 
-            font-size: 1.5rem; cursor: pointer; line-height: 1; transition: color 0.2s;
-        }
-        .modal-close:hover { color: var(--accent-4); }
-        
-        .modal-body { 
-            font-size: 0.95rem; line-height: 1.6; color: var(--text-main); 
-            white-space: pre-wrap; word-break: break-word; max-height: 60vh; 
-            overflow-y: auto; padding-right: 0.5rem;
-        }
-
-        /* ================= UTILIDADES ================= */
-        /* Drag & Drop Overlay */
-        #drop-zone {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(11, 14, 23, 0.8); backdrop-filter: blur(5px);
-            z-index: 9999; display: flex; flex-direction: column;
-            justify-content: center; align-items: center; color: var(--accent-1);
-            border: 4px dashed var(--accent-1); opacity: 0; pointer-events: none;
-            transition: all 0.3s ease; font-family: var(--font-title);
-        }
-        #drop-zone.active { opacity: 1; pointer-events: all; }
-        #drop-zone h2 { font-size: 3rem; margin-bottom: 1rem; }
-
-        /* Toast */
-        #toast-container { position: fixed; bottom: 2rem; right: 2rem; z-index: 1000; display: flex; flex-direction: column; gap: 0.5rem; }
-        .toast {
-            background: var(--bg-card); border: 1px solid var(--border);
-            padding: 1rem 1.5rem; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            display: flex; align-items: center; gap: 1rem; font-family: var(--font-title);
-            animation: slideIn 0.3s ease forwards;
-        }
-        .toast.success { border-left: 4px solid var(--status-baja); }
-        .toast.error { border-left: 4px solid var(--status-alta); }
-
-        /* Animaciones */
-        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        @keyframes fadeOut { to { opacity: 0; transform: translateY(10px); } }
-
     </style>
 </head>
 <body>
 
-    <!-- Drag & Drop Overlay -->
-    <div id="drop-zone">
-        <h2>📁 Suelta el archivo CSV aquí</h2>
-        <p>Los datos se actualizarán automáticamente.</p>
-    </div>
-
-    <!-- Toast Notifications -->
-    <div id="toast-container"></div>
-
-    <!-- Modal Dinámico -->
-    <div id="commentModal" class="modal-overlay" onclick="if(event.target===this) closeModal()">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h4 id="modalTitle">Detalle</h4>
-                <button class="modal-close" onclick="closeModal()">✕</button>
-            </div>
-            <div class="modal-body" id="modalText"></div>
-        </div>
+    <div id="drop-overlay">
+        <h2>Suelta el archivo CSV aquí</h2>
+        <p>El dashboard se actualizará automáticamente</p>
     </div>
 
     <div class="container">
-        <!-- Header -->
         <header>
             <div>
-                <h1>Dictámenes Jurídicos</h1>
-                <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.2rem;">Panel de Análisis y Monitoreo</p>
+                <h1>Dictaminación con IA - v1 Piloto</h1>
+                <p>BANCREA | Soluciones y Plataformas Integradas</p>
             </div>
-            <label class="btn-upload">
-                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
-                Cargar CSV
-                <input type="file" id="csvFileInput" accept=".csv">
-            </label>
+            <div class="header-actions">
+                <div class="btn-group">
+                    <button class="btn btn-green" id="btnSyncSheets">
+                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/><path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/></svg>
+                        Sincronizar Sheets
+                    </button>
+                    <input type="file" id="fileInput" accept=".csv" style="display: none;">
+                    <button class="btn btn-outline" onclick="document.getElementById('fileInput').click()">
+                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708l3-3z"/></svg>
+                        Cargar CSV
+                    </button>
+                </div>
+                <input type="text" id="scriptUrl" class="url-input" value="https://script.google.com/macros/s/AKfycbxFnJkWkDLqrTfJRl4zYCbk2UV2hsQONWf6rfcb1Fb7A1l-eWsrQGD6xvAAPGNfWpe9/exec" placeholder="URL del Script de Google Sheets">
+            </div>
         </header>
 
-        <!-- Filters Section -->
         <section class="filters-section">
-            <div class="filters-grid">
-                <div class="filter-group">
-                    <label>Coordinador</label>
-                    <div class="custom-select" id="custom-select-Coordinador">
-                        <div class="select-trigger" id="trigger-Coordinador" onclick="toggleDropdown('Coordinador', event)">Todos</div>
-                        <div class="select-options" id="options-Coordinador"></div>
-                    </div>
-                </div>
-                <div class="filter-group">
-                    <label>Tipo Dictamen</label>
-                    <div class="custom-select" id="custom-select-Tipo Dictamen">
-                        <div class="select-trigger" id="trigger-Tipo Dictamen" onclick="toggleDropdown('Tipo Dictamen', event)">Todos</div>
-                        <div class="select-options" id="options-Tipo Dictamen"></div>
-                    </div>
-                </div>
-                <div class="filter-group">
-                    <label>Modo</label>
-                    <div class="custom-select" id="custom-select-Modo (Crear o Actualizar)">
-                        <div class="select-trigger" id="trigger-Modo (Crear o Actualizar)" onclick="toggleDropdown('Modo (Crear o Actualizar)', event)">Todos</div>
-                        <div class="select-options" id="options-Modo (Crear o Actualizar)"></div>
-                    </div>
-                </div>
-                <div class="filter-group">
-                    <label>Tipo Gestión</label>
-                    <div class="custom-select" id="custom-select-Tipo Gestión">
-                        <div class="select-trigger" id="trigger-Tipo Gestión" onclick="toggleDropdown('Tipo Gestión', event)">Todos</div>
-                        <div class="select-options" id="options-Tipo Gestión"></div>
-                    </div>
-                </div>
-                <div class="filter-group">
-                    <label>Estatus</label>
-                    <div class="custom-select" id="custom-select-Estatus">
-                        <div class="select-trigger" id="trigger-Estatus" onclick="toggleDropdown('Estatus', event)">Todos</div>
-                        <div class="select-options" id="options-Estatus"></div>
-                    </div>
-                </div>
-                <div class="filter-group">
-                    <label>Pasó por IA</label>
-                    <div class="custom-select" id="custom-select-Pasó por IA">
-                        <div class="select-trigger" id="trigger-Pasó por IA" onclick="toggleDropdown('Pasó por IA', event)">Todos</div>
-                        <div class="select-options" id="options-Pasó por IA"></div>
-                    </div>
-                </div>
+            <div class="filters-header">
+                <button class="btn btn-outline" id="btnPreestablecido" style="display: none;">★ Filtro Preestablecido</button>
+                <button class="btn btn-outline" id="btnLimpiarFiltros">↺ Limpiar Filtros</button>
             </div>
-            <div class="filters-actions">
-                <div class="active-chips" id="active-chips">
-                    <!-- Chips generados dinámicamente -->
-                </div>
-                <button class="btn-reset" onclick="resetFilters()">↺ Limpiar Filtros</button>
+            <div class="filters-grid" id="filters-container">
+                <!-- Dropdowns generados por JS -->
             </div>
+            <div class="chips-container" id="chips-container"></div>
         </section>
 
-        <!-- KPIs Section -->
         <section class="kpi-grid">
             <div class="kpi-card">
-                <div class="kpi-title">Total Casos</div>
-                <div>
-                    <div class="kpi-value" id="kpi-total">0</div>
-                </div>
-                <div class="kpi-sub" id="kpi-total-sub">0% del dataset original</div>
+                <h3>Total Casos</h3>
+                <div class="value" id="kpi-total">0</div>
+                <div class="sub-value" id="kpi-porcentaje">0% del total original</div>
             </div>
             <div class="kpi-card">
-                <div class="kpi-title">Pasó por IA</div>
-                <div class="kpi-list" id="kpi-ia">
-                    <!-- Contenido IA dinámico -->
-                </div>
+                <h3>Pasó por IA</h3>
+                <ul class="kpi-list" id="kpi-ia"></ul>
             </div>
             <div class="kpi-card">
-                <div class="kpi-title">Modos de Dictamen</div>
-                <div class="kpi-list" id="kpi-modo">
-                    <!-- Contenido Modo dinámico -->
-                </div>
+                <h3>Modos de Dictamen</h3>
+                <ul class="kpi-list" id="kpi-modos"></ul>
             </div>
             <div class="kpi-card">
-                <div class="kpi-title">Tipos de Gestión</div>
-                <div class="kpi-list" id="kpi-gestion">
-                    <!-- Contenido Gestión dinámico -->
-                </div>
+                <h3>Tipos de Gestión</h3>
+                <ul class="kpi-list" id="kpi-gestion"></ul>
+            </div>
+            <div class="kpi-card" id="kpi-card-tiempo" style="display: none;">
+                <h3>Tiempo Abogado</h3>
+                <div class="value" id="kpi-tiempo-abogado">00:00:00</div>
+                <div class="sub-value" id="kpi-tiempo-abogado-promedio">Promedio: 00:00:00</div>
+                <div class="sub-value green" id="kpi-tiempo-abogado-max" style="margin-top: 5px;">Max: 00:00:00</div>
+                <div class="sub-value red" id="kpi-tiempo-abogado-min">Min: 00:00:00</div>
             </div>
         </section>
 
-        <!-- Charts Section -->
         <section class="charts-grid">
             <div class="chart-card full-width">
-                <div class="chart-title">Solicitudes por Día (Tipo Gestión)</div>
-                <div class="chart-container large"><canvas id="chartDias"></canvas></div>
+                <h3>Solicitudes por Día</h3>
+                <div class="chart-container"><canvas id="chart-dias"></canvas></div>
             </div>
-            <div class="chart-card">
-                <div class="chart-title">Casos por Coordinador</div>
-                <div class="chart-container"><canvas id="chartCoordinador"></canvas></div>
+            <div class="chart-card full-width">
+                <h3>Casos por Estatus</h3>
+                <div class="chart-container"><canvas id="chart-estatus"></canvas></div>
             </div>
-            <div class="chart-card">
-                <div class="chart-title">Distribución por Tipo de Gestión</div>
-                <div class="chart-container"><canvas id="chartGestion"></canvas></div>
+            <div class="chart-card half-width">
+                <h3>Casos por Coordinador (Top 10)</h3>
+                <div class="chart-container"><canvas id="chart-coord"></canvas></div>
             </div>
-            <div class="chart-card">
-                <div class="chart-title">Top Tipos de Dictamen</div>
-                <div class="chart-container"><canvas id="chartDictamen"></canvas></div>
+            <div class="chart-card half-width">
+                <h3>Top Tipos de Dictamen (Top 8)</h3>
+                <div class="chart-container"><canvas id="chart-dictamen"></canvas></div>
             </div>
         </section>
 
-        <!-- Table Section -->
         <section class="table-section">
-            <div class="table-header">
-                <h3 class="label" style="font-size: 1.2rem; color: #fff;">Detalle de Solicitudes</h3>
-                <input type="text" id="searchInput" class="search-box" placeholder="Buscar en resultados..." oninput="handleSearch()">
+            <div class="table-title">
+                <h3>Detalle de Solicitud</h3>
             </div>
-            <div class="table-container">
+            <div class="table-header-tools">
+                <div class="table-controls">
+                    <input type="text" class="search-box" id="tableSearch" placeholder="Buscar en tabla...">
+                    <span>Mostrar: 
+                        <select id="pageSizeSelect" class="page-select">
+                            <option value="20">20</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                            <option value="all">Todas</option>
+                        </select>
+                    </span>
+                    <span id="recordCount" style="color: var(--text-muted);"></span>
+                </div>
+                <button class="btn" id="btnExportar">
+                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
+                    Exportar CSV
+                </button>
+            </div>
+            <div class="table-wrapper">
                 <table id="dataTable">
-                    <thead>
-                        <tr>
-                            <th onclick="handleSort('Caso')">Caso ↕</th>
-                            <th onclick="handleSort('Ref Base')">Ref Base ↕</th>
-                            <th onclick="handleSort('Fecha de Inicio')">Inicio (DD-MMM-YYYY) ↕</th>
-                            <th onclick="handleSort('Fecha de Última Modificación')">Últ. Mod (DD-MMM-YYYY) ↕</th>
-                            <th onclick="handleSort('Nombre')">Nombre ↕</th>
-                            <th onclick="handleSort('RFC')">RFC ↕</th>
-                            <th>Proceso 72</th>
-                            <th>Proceso 226</th>
-                            <th>Proceso 222</th>
-                            <th onclick="handleSort('Coordinador')">Coordinador ↕</th>
-                            <th onclick="handleSort('Abogado')">Abogado ↕</th>
-                            <th onclick="handleSort('Ejecutivo')">Ejecutivo ↕</th>
-                            <th onclick="handleSort('Tipo Dictamen')">Tipo Dictamen ↕</th>
-                            <th onclick="handleSort('Modo (Crear o Actualizar)')">Modo ↕</th>
-                            <th onclick="handleSort('Estatus')">Estatus ↕</th>
-                            <th onclick="handleSort('Tipo Gestión')">Tipo Gestión ↕</th>
-                            <th onclick="handleSort('Pasó por IA')">Pasó por IA ↕</th>
-                            <th onclick="handleSort('Obs.')">Obs. ↕</th>
-                            <th onclick="handleSort('Comentarios Abogado')">Comentarios Abogado ↕</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableBody">
-                        <!-- Rows dinámicas -->
-                    </tbody>
+                    <thead><!-- JS inject --></thead>
+                    <tbody><!-- JS inject --></tbody>
                 </table>
             </div>
-            <div class="table-footer">
-                <span id="tableInfo">Mostrando 0 registros.</span>
-                <span>Max 200 filas mostradas para optimización.</span>
+            <div class="pagination-container" id="paginationContainer">
+                <button class="page-btn" id="btnPrevPage">◀ Anterior</button>
+                <span id="pageInfo">Página 1 de 1</span>
+                <button class="page-btn" id="btnNextPage">Siguiente ▶</button>
             </div>
         </section>
     </div>
 
-    <!-- ================= JAVASCRIPT ================= -->
+    <!-- Modal Base -->
+    <div class="modal-overlay" id="globalModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">✖</button>
+            <h3 class="modal-title" id="modalTitle">Título</h3>
+            <div class="modal-body" id="modalBody">Contenido</div>
+        </div>
+    </div>
+
     <script>
-        // --- 1. CONFIGURACIÓN Y ESTADO ---
-        // Registrar plugin de etiquetas en los gráficos globalmente
         Chart.register(ChartDataLabels);
-        Chart.defaults.set('plugins.datalabels', {
-            color: '#ffffff',
-            font: { weight: 'bold', size: 16, family: "'DM Mono', monospace" },
-            textStrokeColor: 'rgba(0,0,0,0.6)', 
-            textStrokeWidth: 3,
-            anchor: 'center',
-            align: 'center',
-            formatter: (val) => val > 0 ? val : ''
-        });
 
-        const EXPECTED_COLS = [
-            "Caso", "Ref Base", "Fecha de Inicio", "Fecha de Última Modificación", "Nombre", 
-            "RFC", "Proceso 72", "Proceso 226", "Proceso 222", "Coordinador", "Abogado", 
-            "Ejecutivo", "Tipo Dictamen", "Modo (Crear o Actualizar)", "Estatus", 
-            "Tipo Gestión", "Pasó por IA", "Obs.", "Comentarios Abogado"
-        ];
+        // --- CONSTANTES Y ESTADO ---
+        const FILTER_KEYS = ['Coordinador', 'Tipo Dictamen', 'Modo', 'Estatus', 'Pasó por IA', 'Tipo Gestión'];
+        const MESES = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+        const DIAS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
         
-        const COL_ALIASES = {
-            "modo": "Modo (Crear o Actualizar)",
-            "obs": "Obs.", "observaciones": "Obs.",
-            "fecha inicio": "Fecha de Inicio", "fecha de ultima modificacion": "Fecha de Última Modificación",
-            "tipo de gestion": "Tipo Gestión", "tipo gestion": "Tipo Gestión", "gestion": "Tipo Gestión",
-            "paso por ia": "Pasó por IA", "ia": "Pasó por IA",
-            "comentarios abogado": "Comentarios Abogado", "comentarios": "Comentarios Abogado"
+        let originalData = [];
+        let currentData = [];
+        let activeFilters = {
+            'Coordinador': new Set(), 'Tipo Dictamen': new Set(), 'Modo': new Set(),
+            'Estatus': new Set(), 'Pasó por IA': new Set(), 'Tipo Gestión': new Set()
         };
-
-        const FILTER_COLS = ["Coordinador", "Tipo Dictamen", "Modo (Crear o Actualizar)", "Tipo Gestión", "Estatus", "Pasó por IA"];
-
-        let rawData = [];
-        let filteredData = [];
-        let activeFilters = { ...FILTER_COLS.reduce((acc, col) => ({...acc, [col]: []}), {}) };
         let charts = {};
-        let currentSort = { col: null, asc: true };
-        let searchTerm = "";
+        
+        // Estado de la tabla
+        let sortCol = null;
+        let sortAsc = false;
+        let tableSearchQuery = "";
+        let showAdvancedMetrics = false; 
+        
+        // Paginación
+        let currentPage = 1;
+        let rowsPerPage = 20;
 
-        // --- 2. DATOS DE EJEMPLO (FALLBACK) ---
-        const fallbackData = [
-            { "Caso": "1", "Ref Base": "SDJ-72.1_20581", "Fecha de Inicio": "29-Jun-2026", "Fecha de Última Modificación": "07-Jul-2026", "Nombre": "MANUFACTURERA MURO SA DE CV EMPRESA CON UN NOMBRE EXTREMADAMENTE LARGO PARA PROBAR LA FUNCIONALIDAD DE MULTILINEA EN LA TABLA", "RFC": "MMU101110ABA", "Proceso 72": "https://bpmneon.bancrea.com/link1", "Proceso 226": "https://bpmneon.bancrea.com/link2", "Proceso 222": "", "Coordinador": "Heber Jazhim Lara Maldonado", "Abogado": "Pedro Ernesto Soto Medina", "Ejecutivo": "Aldo Uriel Duarte Perez", "Tipo Dictamen": "Apertura de Cuenta y Formalización de Crédito / Arrendamiento", "Modo (Crear o Actualizar)": "Crear", "Estatus": "Asignada al Abogado - IA:OK", "Tipo Gestión": "Tradicional", "Pasó por IA": "Si", "Obs.": "FINALIZADO", "Comentarios Abogado": "SE REQUIERE EL ACTA 14,472 EN PRIMER TESTIMONIO CON DATOS DE INSCRIPCION." },
-            { "Caso": "155", "Ref Base": "SDJ-72.1_20837", "Fecha de Inicio": "09-Jul-2026", "Fecha de Última Modificación": "09-Jul-2026", "Nombre": "ARNESES MEXICANOS", "RFC": "AME151029UY6", "Proceso 72": "https://link3", "Proceso 226": "", "Proceso 222": "", "Coordinador": "Georgina Yanin Zamora Morales", "Abogado": "Diego Raul Enriquez Huerta", "Ejecutivo": "Luis Alberto García Leal", "Tipo Dictamen": "Apertura de Cuenta", "Modo (Crear o Actualizar)": "Crear", "Estatus": "Pendiente", "Tipo Gestión": "Híbrida", "Pasó por IA": "Si", "Obs.": "", "Comentarios Abogado": "Documentos pendientes de revisión interna." },
-            { "Caso": "156", "Ref Base": "SDJ-72.1_20838", "Fecha de Inicio": "09-Jul-2026", "Fecha de Última Modificación": "09-Jul-2026", "Nombre": "PLANIFICACION Y ADMINISTRACION DE EMPRESAS", "RFC": "PAE051028IB2", "Proceso 72": "https://link4", "Proceso 226": "", "Proceso 222": "", "Coordinador": "Georgina Yanin Zamora Morales", "Abogado": "Braulio Tadeo Cardenas Alanis", "Ejecutivo": "Miguel Molina Estrada", "Tipo Dictamen": "Apertura de Cuenta", "Modo (Crear o Actualizar)": "Actualizar", "Estatus": "En Revisión", "Tipo Gestión": "Asistido IA", "Pasó por IA": "No", "Obs.": "Revisar datos fiscales.", "Comentarios Abogado": "" }
+        const advColumns = [
+            'Cod. Desvío Dictamen IA', 'SDJv2_AperturaCuenta', 'SDJv2_AperturaCuenta_Arrendamiento',
+            'CronometroTareaAbogadoAsignar', 'CronometroTareaAbogado', 'Nivel Eficiencia',
+            'Tiempo Coordinador', 'TiempoAbogado'
         ];
 
-        // --- 3. UTILIDADES DE NORMALIZACIÓN ---
-        function normalizeStr(str) {
-            if(!str) return "";
-            return str.toString().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-        }
+        // --- DATOS FALLBACK ---
+        const fallbackCSV = `Caso,Ref Base,Fecha de Inicio,Fecha de Última Modificación,Nombre,RFC,Proceso 72,Proceso 226,Proceso 222,Coordinador,Abogado,Ejecutivo,Tipo Dictamen,Modo (Crear o Actualizar),Estatus,Tipo Gestión,Pasó por IA,Obs.,Comentarios Abogado,Cod. Desvío Dictamen IA,SDJv2_AperturaCuenta,SDJv2_AperturaCuenta_Arrendamiento,CronometroTareaAbogadoAsignar,CronometroTareaAbogado,Nivel Eficiencia,Tiempo Coordinador,TiempoAbogado
+1001,R-001,01/07/2026 (14:30),05/07/2026 (18:45),Empresa Comercializadora del Norte SA de CV,ECN123456,https://ejemplo.com/p72/1,https://ejemplo.com/p226/1,,Georgina Yanín García,Luis Pérez,Ana Gómez,Apertura de Cuenta y Formalización de Crédito / Arrendamiento,Crear,En Progreso,Tradicional,No,,Revisando documentos,N/A,1,0,10,30,Alto,15,01:45:30
+1002,R-002,02/07/2026 (09:15),06/07/2026 (10:20),"Inmobiliaria y Constructora de Alta Tecnología Metropolitana de San Pedro Garza García S.A. de C.V.",ICA098765,https://ejemplo.com/p72/2,https://ejemplo.com/p226/2,https://ejemplo.com/p222/2,Heber Jazhim López,Carlos Ruiz,María Flor,Apertura de Cuenta,Actualizar,Completado,Asistido IA,Si,FINALIZADO,"Todo en orden, validado por IA",D-01,0,1,5,45,Medio,20,00:30:15
+1003,R-003,03/07/2026 (11:00),07/07/2026 (13:10),Servicios Rápidos SC,SER112233,,,https://ejemplo.com/p222/3,Roberto Carlos Vega,Jesús Martínez,Pedro Sánchez,Poderes,Crear,Pendiente,Tradicional,No,Falta firma,Esperando cliente,N/A,0,0,15,60,Bajo,10,02:15:00
+1004,R-004,04/07/2026 (16:45),07/07/2026 (17:30),Logística Avanzada de Occidente,LOG445566,https://ejemplo.com/p72/4,,,Georgina Yanín García,Luis Pérez,Ana Gómez,Apertura de Cuenta,Crear,Completado,Asistido IA,Si,,Sin novedades,D-02,1,1,2,0,Alto,5,
+1005,R-005,05/07/2026 (08:20),08/07/2026 (09:40),Consultores Martínez y Asociados,CMA998877,,https://ejemplo.com/p226/5,https://ejemplo.com/p222/5,Heber Jazhim López,Carlos Ruiz,María Flor,Poderes,Actualizar,En Progreso,Tradicional,No,,Detalle en escritura,N/A,0,0,5,-,Medio,10,00:00:00`;
 
-        const MONTH_NAMES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-        const MONTH_MAP = { 'ene':0, 'feb':1, 'mar':2, 'abr':3, 'may':4, 'jun':5, 'jul':6, 'ago':7, 'sep':8, 'oct':9, 'nov':10, 'dic':11 };
-
-        // Convierte fechas a DD-MMM-YYYY
-        function normalizeDate(val) {
-            if(!val) return "";
-            let s = val.trim().toLowerCase();
-            let d = '01', m = '00', y = '';
-
-            // Formato 1: DD/MM/YYYY o DD-MM-YYYY
-            let match1 = s.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
-            if (match1) {
-                d = match1[1].padStart(2, '0');
-                m = parseInt(match1[2]) - 1;
-                y = match1[3].length === 2 ? '20' + match1[3] : match1[3];
-                if (m >= 0 && m <= 11) return `${d}-${MONTH_NAMES[m]}-${y}`;
-            }
-
-            // Formato 2: MM/YYYY o MM-YYYY (asume día 01)
-            let match2 = s.match(/^(\d{1,2})[\/\-](\d{2,4})/);
-            if (match2) {
-                m = parseInt(match2[1]) - 1;
-                y = match2[2].length === 2 ? '20' + match2[2] : match2[2];
-                if (m >= 0 && m <= 11) return `01-${MONTH_NAMES[m]}-${y}`;
-            }
-
-            // Formato 3: Letras (ene-25, 29-jun-26, etc)
-            for (const [mName, mIdx] of Object.entries(MONTH_MAP)) {
-                if (s.includes(mName)) {
-                    let yMatch = s.match(/\d{2,4}/);
-                    if(yMatch) {
-                        y = yMatch[0].length === 2 ? '20' + yMatch[0] : yMatch[0];
-                        // Busca si el día está presente antes del mes
-                        let dMatch = s.match(/(\d{1,2})\s*[\/\-]?\s*[a-z]{3}/);
-                        if (dMatch) d = dMatch[1].padStart(2, '0');
-                        return `${d}-${MONTH_NAMES[mIdx]}-${y}`;
-                    }
-                }
-            }
-            return val;
-        }
-
-        // Convierte DD-MMM-YYYY a un Timestamp real (para ordenamiento numérico/cronológico)
-        function dateToTimestamp(str) {
-            if(!str) return 0;
-            let parts = str.split('-');
-            if(parts.length === 3) {
-                let d = parseInt(parts[0]);
-                let m = MONTH_NAMES.indexOf(parts[1]);
-                let y = parseInt(parts[2]);
-                if(m !== -1) return new Date(y, m, d).getTime();
-            }
-            return 0;
-        }
-
-        // --- 4. PARSER CSV ---
         function parseCSV(text) {
             let p = '', row = [''], ret = [row], i = 0, r = 0, s = !0, l;
+            text = text.replace(/\r/g, '');
             for (l of text) {
                 if ('"' === l) {
                     if (s && l === p) row[i] += l;
                     s = !s;
                 } else if (',' === l && s) l = row[++i] = '';
-                else if ('\n' === l && s) {
-                    if ('\r' === p) row[i] = row[i].slice(0, -1);
-                    row = ret[++r] = [l = '']; i = 0;
-                } else row[i] += l;
+                else if ('\n' === l && s) { row = ret[++r] = [l = '']; i = 0; } 
+                else row[i] += l;
                 p = l;
             }
-            if (ret[ret.length - 1].length === 1 && ret[ret.length - 1][0] === '') ret.pop();
-            
-            for(let y=0; y<ret.length; y++){
-                for(let x=0; x<ret[y].length; x++){
-                    ret[y][x] = ret[y][x].replace(/\r/g, '').trim();
-                }
-            }
-            return ret;
+            return ret.filter(r => r.length > 1 || r[0].trim() !== '');
         }
 
-        function processCSV(csvText) {
-            const rows = parseCSV(csvText);
-            if (rows.length < 2) throw new Error("El archivo está vacío o no tiene formato válido.");
+        function formatName(fullName) {
+            if (!fullName) return '';
+            return fullName.trim().split(/\s+/).slice(0, 2).join(' ');
+        }
 
-            const headersRaw = rows[0];
-            const headerMap = {};
-            
-            headersRaw.forEach((h, idx) => {
-                let norm = normalizeStr(h);
-                for(let expected of EXPECTED_COLS) {
-                    let expNorm = normalizeStr(expected);
-                    if(norm === expNorm || (COL_ALIASES[norm] === expected)) {
-                        headerMap[expected] = idx;
-                        break;
-                    }
+        function parseDate(dateStr) {
+            if (!dateStr) return { str: '', ts: 0, ddmmm: '' };
+            const match = dateStr.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s*\((.*?)\))?/);
+            if (match) {
+                const day = parseInt(match[1], 10);
+                const monthIndex = parseInt(match[2], 10) - 1;
+                const year = parseInt(match[3], 10);
+                let hours = 0, mins = 0;
+                if (match[4]) {
+                    const timeMatch = match[4].match(/(\d{1,2}):(\d{2})/);
+                    if (timeMatch) { hours = parseInt(timeMatch[1], 10); mins = parseInt(timeMatch[2], 10); }
                 }
-            });
+                const d = new Date(year, monthIndex, day, hours, mins);
+                return {
+                    str: `${day.toString().padStart(2, '0')}-${MESES[d.getMonth()]}-${year}`,
+                    ts: d.getTime(),
+                    ddmmm: `${DIAS[d.getDay()]} ${day.toString().padStart(2, '0')}-${MESES[d.getMonth()]}`
+                };
+            }
+            const d = new Date(dateStr);
+            if (isNaN(d)) return { str: dateStr, ts: 0, ddmmm: dateStr };
+            return {
+                str: `${d.getDate().toString().padStart(2, '0')}-${MESES[d.getMonth()]}-${d.getFullYear()}`,
+                ts: d.getTime(),
+                ddmmm: `${DIAS[d.getDay()]} ${d.getDate().toString().padStart(2, '0')}-${MESES[d.getMonth()]}`
+            };
+        }
 
-            const newData = [];
-            for(let i=1; i<rows.length; i++) {
-                let row = rows[i];
+        function timeToSeconds(timeStr) {
+            if (!timeStr) return 0;
+            const str = String(timeStr).trim();
+            
+            // Detectar si Google Sheets envió el tiempo como fecha (Ej: Sat Dec 30 1899 01:45:30 GMT-0600)
+            const dateMatch = str.match(/\d{2}:\d{2}:\d{2}/);
+            let parseStr = dateMatch ? dateMatch[0] : str;
+            
+            const parts = parseStr.split(':');
+            if (parts.length === 3) return (+parts[0]) * 3600 + (+parts[1]) * 60 + (+parts[2]);
+            return parseFloat(parseStr) || 0;
+        }
+
+        function secondsToTime(totalSeconds) {
+            if (isNaN(totalSeconds) || totalSeconds < 0) return "00:00:00";
+            const h = Math.floor(totalSeconds / 3600);
+            const m = Math.floor((totalSeconds % 3600) / 60);
+            const s = Math.floor(totalSeconds % 60);
+            return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        }
+
+        function processData(csvString) {
+            const rows = parseCSV(csvString);
+            if(rows.length < 2) return;
+            
+            const headers = rows[0].map(h => h.trim() === 'Modo (Crear o Actualizar)' ? 'Modo' : h.trim());
+            const data = [];
+
+            for (let i = 1; i < rows.length; i++) {
                 let obj = {};
-                let isEmpty = true;
-                
-                EXPECTED_COLS.forEach(col => {
-                    let idx = headerMap[col];
-                    let val = (idx !== undefined && row[idx] !== undefined) ? row[idx] : "";
-                    if(col === 'Fecha de Inicio' || col === 'Fecha de Última Modificación') { 
-                        val = normalizeDate(val); 
+                headers.forEach((h, idx) => {
+                    let val = rows[i][idx] ? rows[i][idx].trim() : '';
+                    if (h === 'Tipo Dictamen') {
+                        if (val === 'Apertura de Cuenta y Formalización de Crédito / Arrendamiento') val = 'Crédito';
+                        if (val === 'Apertura de Cuenta') val = 'Cuenta';
                     }
-                    
-                    obj[col] = val;
-                    if(val !== "") isEmpty = false;
+                    if (['Coordinador', 'Abogado', 'Ejecutivo'].includes(h)) val = formatName(val);
+                    if (h === 'Fecha de Inicio' || h === 'Fecha de Última Modificación') {
+                        obj[h] = parseDate(val);
+                    } else {
+                        obj[h] = val;
+                    }
                 });
-                
-                if(!isEmpty) newData.push(obj);
+                data.push(obj);
             }
-            
-            if(newData.length === 0) throw new Error("No se encontraron datos válidos tras procesar.");
-            
-            rawData = newData;
-            initDashboard();
-            showToast(`Carga exitosa: ${rawData.length} registros.`, 'success');
-        }
-
-        // --- 5. LOGICA DE INTERFAZ Y FILTROS MÚLTIPLES ---
-        function initDashboard() {
-            filteredData = [...rawData];
-            searchTerm = "";
-            document.getElementById('searchInput').value = "";
-            buildFilters();
+            originalData = data;
             applyFilters();
+            buildFiltersUI();
         }
 
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.custom-select')) {
-                document.querySelectorAll('.select-options').forEach(el => el.classList.remove('open'));
+        document.getElementById('btnSyncSheets').addEventListener('click', async function() {
+            const url = document.getElementById('scriptUrl').value.trim();
+            if (!url) return alert("Por favor ingresa la URL del Script de Google Sheets");
+            
+            const btn = this;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '⏳ Sincronizando...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error("Error en la respuesta del servidor");
+                const csvData = await response.text();
+                processData(csvData);
+            } catch (error) {
+                console.error(error);
+                alert("Error al sincronizar con Google Sheets. Verifica la URL y los permisos.");
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
             }
         });
 
-        function toggleDropdown(col, event) {
-            event.stopPropagation();
-            const dropdown = document.getElementById(`options-${col}`);
-            const isOpen = dropdown.classList.contains('open');
-            document.querySelectorAll('.select-options').forEach(el => el.classList.remove('open'));
-            if (!isOpen) dropdown.classList.add('open');
-        }
-
-        function buildFilters() {
-            FILTER_COLS.forEach(col => {
-                const container = document.getElementById(`options-${col}`);
-                const currentValArray = activeFilters[col]; 
-                
-                const uniqueVals = [...new Set(rawData.map(d => d[col]))].filter(v => v !== "").sort();
-                
-                container.innerHTML = ''; 
-                
-                uniqueVals.forEach(val => {
-                    const isChecked = currentValArray.includes(val);
-                    const label = document.createElement('label');
-                    label.className = 'option-label';
-                    label.innerHTML = `
-                        <span>${val}</span>
-                        <input type="checkbox" value="${val}" ${isChecked ? 'checked' : ''} onchange="handleCheckboxChange('${col}')">
-                    `;
-                    container.appendChild(label);
-                });
-                
-                updateTriggerText(col);
-            });
-            renderChips();
-        }
-
-        function updateTriggerText(col) {
-            const trigger = document.getElementById(`trigger-${col}`);
-            const count = activeFilters[col].length;
-            if (count === 0) {
-                trigger.innerText = 'Todos';
-            } else if (count === 1) {
-                trigger.innerText = '1 seleccionado';
-            } else {
-                trigger.innerText = `${count} seleccionados`;
-            }
-        }
-
-        function handleCheckboxChange(col) {
-            const container = document.getElementById(`options-${col}`);
-            const checkboxes = container.querySelectorAll('input[type="checkbox"]:checked');
-            activeFilters[col] = Array.from(checkboxes).map(cb => cb.value);
-            
-            updateTriggerText(col);
-            applyFilters();
-        }
-
-        function removeFilter(col, val) {
-            activeFilters[col] = activeFilters[col].filter(v => v !== val);
-            
-            const container = document.getElementById(`options-${col}`);
-            const checkbox = container.querySelector(`input[value="${val}"]`);
-            if(checkbox) checkbox.checked = false;
-            
-            updateTriggerText(col);
-            applyFilters();
-        }
-
-        function resetFilters() {
-            FILTER_COLS.forEach(col => {
-                activeFilters[col] = [];
-                const container = document.getElementById(`options-${col}`);
-                container.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
-                updateTriggerText(col);
-            });
-            document.getElementById('searchInput').value = "";
-            searchTerm = "";
-            applyFilters();
-        }
-
-        function renderChips() {
-            const container = document.getElementById('active-chips');
+        function buildFiltersUI() {
+            const container = document.getElementById('filters-container');
             container.innerHTML = '';
             
-            FILTER_COLS.forEach(col => {
-                if(activeFilters[col] && activeFilters[col].length > 0) {
-                    activeFilters[col].forEach(val => {
-                        if(val !== 'ALL') {
-                            const chip = document.createElement('div');
-                            chip.className = 'chip';
-                            chip.innerHTML = `<span>${col}:</span> ${val} <button onclick="removeFilter('${col}', '${val}')">✕</button>`;
-                            container.appendChild(chip);
-                        }
+            FILTER_KEYS.forEach(key => {
+                const uniqueValues = [...new Set(originalData.map(d => d[key]).filter(v => v))].sort();
+                
+                if (key === 'Tipo Gestión') {
+                    const group = document.createElement('div');
+                    group.className = 'gestion-checkbox-group';
+                    group.innerHTML = `<span>${key}:</span>`;
+                    
+                    uniqueValues.forEach(val => {
+                        const lbl = document.createElement('label');
+                        const cb = document.createElement('input');
+                        cb.type = 'checkbox';
+                        cb.dataset.key = key;
+                        cb.dataset.val = val;
+                        cb.checked = activeFilters[key].has(val);
+                        cb.onchange = (e) => {
+                            if (e.target.checked) activeFilters[key].add(val);
+                            else activeFilters[key].delete(val);
+                            updateChips(); applyFilters();
+                        };
+                        lbl.appendChild(cb);
+                        lbl.appendChild(document.createTextNode(val));
+                        group.appendChild(lbl);
                     });
+                    container.appendChild(group);
+                } else {
+                    const selectDiv = document.createElement('div');
+                    selectDiv.className = 'custom-select';
+                    const btn = document.createElement('button');
+                    btn.className = 'select-btn';
+                    btn.innerText = key;
+                    btn.onclick = (e) => {
+                        document.querySelectorAll('.custom-select').forEach(el => { if(el !== selectDiv) el.classList.remove('open'); });
+                        selectDiv.classList.toggle('open'); e.stopPropagation();
+                    };
+                    const dropdown = document.createElement('div');
+                    dropdown.className = 'select-dropdown';
+                    
+                    uniqueValues.forEach(val => {
+                        const opt = document.createElement('label');
+                        opt.className = 'select-option';
+                        const span = document.createElement('span');
+                        span.innerText = val;
+                        const cb = document.createElement('input');
+                        cb.type = 'checkbox';
+                        cb.dataset.key = key;
+                        cb.dataset.val = val;
+                        cb.checked = activeFilters[key].has(val);
+                        cb.onchange = (e) => {
+                            if (e.target.checked) activeFilters[key].add(val);
+                            else activeFilters[key].delete(val);
+                            updateChips(); applyFilters();
+                        };
+                        opt.appendChild(span); opt.appendChild(cb); dropdown.appendChild(opt);
+                    });
+                    selectDiv.appendChild(btn); selectDiv.appendChild(dropdown); container.appendChild(selectDiv);
                 }
             });
         }
 
-        function applyFilters() {
-            renderChips();
-            
-            filteredData = rawData.filter(row => {
-                let pass = true;
-                for (let col of FILTER_COLS) {
-                    if (activeFilters[col] && activeFilters[col].length > 0 && !activeFilters[col].includes('ALL')) {
-                        if (!activeFilters[col].includes(row[col])) {
-                            pass = false; break;
-                        }
-                    }
-                }
-                
-                if(pass && searchTerm !== "") {
-                    let rowText = Object.values(row).join(" ").toLowerCase();
-                    if(!rowText.includes(searchTerm)) pass = false;
-                }
-                return pass;
+        function updateChips() {
+            const container = document.getElementById('chips-container');
+            container.innerHTML = '';
+            FILTER_KEYS.forEach(key => {
+                activeFilters[key].forEach(val => {
+                    const chip = document.createElement('div');
+                    chip.className = 'chip';
+                    chip.innerHTML = `${key}: ${val} <span onclick="removeFilter('${key}', '${val}')">✖</span>`;
+                    container.appendChild(chip);
+                });
             });
+            document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                if(cb.dataset.key) cb.checked = activeFilters[cb.dataset.key].has(cb.dataset.val);
+            });
+        }
 
-            if(currentSort.col) sortDataArray();
+        window.removeFilter = function(key, val) {
+            activeFilters[key].delete(val);
+            updateChips(); applyFilters();
+        };
 
-            renderKPIs();
+        document.getElementById('btnLimpiarFiltros').onclick = () => {
+            FILTER_KEYS.forEach(k => activeFilters[k].clear());
+            updateChips(); applyFilters();
+        };
+
+        function applyFilters() {
+            currentData = originalData.filter(row => {
+                for (let key of FILTER_KEYS) {
+                    if (activeFilters[key].size > 0 && !activeFilters[key].has(row[key])) return false;
+                }
+                return true;
+            });
+            currentPage = 1; // Reset pagination
+            updateDashboard();
+        }
+
+        document.addEventListener('click', () => { document.querySelectorAll('.custom-select').forEach(el => el.classList.remove('open')); });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && (e.key === 'ñ' || e.key === 'Ñ')) {
+                e.preventDefault();
+                showAdvancedMetrics = !showAdvancedMetrics;
+                document.getElementById('kpi-card-tiempo').style.display = showAdvancedMetrics ? 'block' : 'none';
+                renderTable(); // Re-renderiza para mostrar/ocultar columnas
+            }
+        });
+
+        function updateDashboard() {
+            updateKPIs();
             renderCharts();
             renderTable();
         }
 
-        function handleSearch() {
-            searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            applyFilters();
-        }
-
-        // --- 6. RENDERIZADO (KPIs, Charts, Table) ---
-        function getCountsHTML(data, col) {
-            let counts = {};
-            data.forEach(d => {
-                let v = d[col];
-                if (v === undefined || v === "") v = 'N/A';
-                counts[v] = (counts[v] || 0) + 1;
-            });
-            const entries = Object.entries(counts).sort((a,b) => b[1] - a[1]);
-            if(entries.length === 0) return `<div class="kpi-list-item"><span>Sin datos</span><strong>-</strong></div>`;
-            return entries.map(e => `<div class="kpi-list-item"><span>${e[0]}</span> <strong>${e[1]}</strong></div>`).join('');
-        }
-
-        function renderKPIs() {
-            const total = filteredData.length;
-            const pct = rawData.length ? Math.round((total / rawData.length) * 100) : 0;
-            
+        function updateKPIs() {
+            const total = currentData.length;
+            const origTotal = originalData.length;
             document.getElementById('kpi-total').innerText = total;
-            document.getElementById('kpi-total-sub').innerText = `${pct}% del dataset original`;
-            document.getElementById('kpi-ia').innerHTML = getCountsHTML(filteredData, 'Pasó por IA');
-            document.getElementById('kpi-modo').innerHTML = getCountsHTML(filteredData, 'Modo (Crear o Actualizar)');
-            document.getElementById('kpi-gestion').innerHTML = getCountsHTML(filteredData, 'Tipo Gestión');
-        }
+            document.getElementById('kpi-porcentaje').innerText = origTotal > 0 ? `${((total / origTotal) * 100).toFixed(1)}% del dataset original` : '0%';
 
-        function aggregate(data, col) {
-            let res = {};
-            data.forEach(d => {
-                let v = d[col] || 'N/A';
-                res[v] = (res[v] || 0) + 1;
+            // Cálculos del Tiempo Abogado filtrando ceros y campos inválidos
+            let validTimes = [];
+            currentData.forEach(row => {
+                let crono = row['CronometroTareaAbogado'];
+                let time = row['TiempoAbogado'];
+                // Validar que exista tiempo, exista cronómetro, crono no sea guion y no sea cero.
+                if (time && String(time).trim() !== '' && crono && crono !== '-' && String(crono).trim() !== '0') {
+                    let secs = timeToSeconds(time);
+                    validTimes.push(secs);
+                }
             });
-            return Object.entries(res).sort((a,b) => b[1] - a[1]);
+
+            const sumSecs = validTimes.reduce((a, b) => a + b, 0);
+            const avgSecs = validTimes.length > 0 ? (sumSecs / validTimes.length) : 0;
+            const maxSecs = validTimes.length > 0 ? Math.max(...validTimes) : 0;
+            const minSecs = validTimes.length > 0 ? Math.min(...validTimes) : 0;
+
+            document.getElementById('kpi-tiempo-abogado').innerText = secondsToTime(sumSecs);
+            document.getElementById('kpi-tiempo-abogado-promedio').innerText = `Promedio: ${secondsToTime(avgSecs)}`;
+            document.getElementById('kpi-tiempo-abogado-max').innerText = `Max: ${secondsToTime(maxSecs)}`;
+            document.getElementById('kpi-tiempo-abogado-min').innerText = `Min: ${secondsToTime(minSecs)}`;
+
+            const countProp = (prop, ulId, showPercentage = false) => {
+                const counts = currentData.reduce((acc, row) => {
+                    const val = row[prop] || 'N/A';
+                    acc[val] = (acc[val] || 0) + 1;
+                    return acc;
+                }, {});
+                const ul = document.getElementById(ulId);
+                ul.innerHTML = '';
+                Object.entries(counts).sort((a,b) => b[1]-a[1]).forEach(([k, v]) => {
+                    if (showPercentage && total > 0) {
+                        const pct = Math.round((v / total) * 100);
+                        ul.innerHTML += `<li><span>${k}</span> <strong>${v} / ${pct}%</strong></li>`;
+                    } else {
+                        ul.innerHTML += `<li><span>${k}</span> <strong>${v}</strong></li>`;
+                    }
+                });
+            };
+
+            countProp('Pasó por IA', 'kpi-ia');
+            countProp('Modo', 'kpi-modos');
+            countProp('Tipo Gestión', 'kpi-gestion', true);
         }
 
-        function setupChart(id, config) {
+        const getChartOptions = () => ({
+            responsive: true, maintainAspectRatio: false, color: '#f3f4f6',
+            plugins: {
+                legend: { labels: { color: '#f3f4f6', font: { family: 'Syne' } } },
+                datalabels: {
+                    color: 'white',
+                    font: { size: 14, weight: 'bold', family: 'DM Mono' },
+                    textStrokeColor: 'black', textStrokeWidth: 3,
+                    display: function(context) { return context.dataset.data[context.dataIndex] > 0; }
+                }
+            }
+        });
+
+        const gridOptions = { color: '#272c3d', borderColor: '#272c3d', tickColor: '#272c3d' };
+        const ticksOptions = { 
+            color: '#9ca3af', font: { family: 'DM Mono' },
+            callback: function(val) { return val === 0 ? '' : val; } 
+        };
+
+        function getChartColors(labels) {
+            const dict = { 'Tradicional': '#10b981', 'Asistido IA': '#f59e0b' };
+            const fallback = ['#3b82f6', '#ec4899', '#8b5cf6', '#06b6d4'];
+            let fIdx = 0; return labels.map(l => dict[l] || fallback[fIdx++ % fallback.length]);
+        }
+
+        function createOrUpdateChart(id, config) {
             if (charts[id]) charts[id].destroy();
             const ctx = document.getElementById(id).getContext('2d');
-            Chart.defaults.color = '#94a3b8';
-            Chart.defaults.font.family = "'DM Mono', monospace";
             charts[id] = new Chart(ctx, config);
         }
 
-        function renderCharts() {
-            // Paleta Global Compartida
-            const palette = ['#14b8a6', '#f59e0b', '#6366f1', '#f43f5e', '#8b5cf6', '#3b82f6', '#10b981'];
+        // Plugin para Porcentaje en gráfica Estatus
+        const percentagePlugin = {
+            id: 'estatusPercent',
+            afterDatasetsDraw(chart) {
+                if (chart.canvas.id !== 'chart-estatus') return;
+                const ctx = chart.ctx;
+                const totalFiltered = currentData.length;
+                if (totalFiltered === 0) return;
 
-            // 1. Solicitudes por Día (Stacked Bar Chart: Fechas X Tipo Gestión)
-            let rawDates = [...new Set(filteredData.map(d => d['Fecha de Inicio']).filter(Boolean))];
-            // Ordenamos fechas cronológicamente de izquierda a derecha
-            rawDates.sort((a,b) => dateToTimestamp(a) - dateToTimestamp(b));
-
-            // Formato DD-MMM para las etiquetas del Eje X
-            let displayDates = rawDates.map(date => {
-                let parts = date.split('-');
-                if (parts.length >= 2) return `${parts[0]}-${parts[1]}`; // DD-MMM
-                return date;
-            });
-
-            let gestionCats = [...new Set(filteredData.map(d => d['Tipo Gestión']).filter(Boolean))];
-            let datasetsDias = gestionCats.map((gestion, idx) => {
-                let dataArr = rawDates.map(date => {
-                    return filteredData.filter(d => d['Fecha de Inicio'] === date && d['Tipo Gestión'] === gestion).length;
+                const metaData = [];
+                chart.data.datasets.forEach((dataset, i) => {
+                    const meta = chart.getDatasetMeta(i);
+                    meta.data.forEach((bar, index) => {
+                        if (!metaData[index]) metaData[index] = { total: 0, x: 0, y: bar.y };
+                        metaData[index].total += dataset.data[index];
+                        metaData[index].x = Math.max(metaData[index].x, bar.x);
+                    });
                 });
-                return {
-                    label: gestion,
-                    data: dataArr,
-                    backgroundColor: palette[idx % palette.length],
-                    borderRadius: 4
-                };
-            });
 
-            setupChart('chartDias', {
-                type: 'bar',
-                data: {
-                    labels: displayDates, // Eje X con formato DD-MMM
-                    datasets: datasetsDias
-                },
-                options: { 
-                    responsive: true, maintainAspectRatio: false, 
-                    plugins: { 
-                        legend: { display: true, position: 'right' },
-                        datalabels: { formatter: (val) => val > 0 ? val : '' }
-                    },
-                    scales: { 
-                        x: { stacked: true },
-                        y: { stacked: true, ticks: { stepSize: 1, precision: 0 } } 
+                ctx.save();
+                ctx.font = 'bold 14px "DM Mono"';
+                ctx.fillStyle = 'var(--text-muted)';
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'middle';
+                metaData.forEach(item => {
+                    if (item.total > 0) {
+                        const pct = Math.round((item.total / totalFiltered) * 100);
+                        ctx.fillText(`${pct}%`, item.x + 8, item.y);
                     }
-                }
-            });
-
-            // 2. Coordinador
-            let coordData = aggregate(filteredData, 'Coordinador').slice(0, 10);
-            setupChart('chartCoordinador', {
-                type: 'bar',
-                data: {
-                    labels: coordData.map(d => d[0]),
-                    datasets: [{ label: 'Casos', data: coordData.map(d => d[1]), backgroundColor: '#6366f1', borderRadius: 4 }]
-                },
-                options: { 
-                    indexAxis: 'y', responsive: true, maintainAspectRatio: false, 
-                    plugins: { legend: {display: false} },
-                    scales: { x: { ticks: { stepSize: 1, precision: 0 } } } 
-                }
-            });
-
-            // 3. Tipo Gestión
-            let gestionData = aggregate(filteredData, 'Tipo Gestión');
-            let gLabels = gestionData.map(d => d[0]);
-            let gColors = gLabels.map((l, i) => palette[i % palette.length]);
-            
-            setupChart('chartGestion', {
-                type: 'doughnut',
-                data: {
-                    labels: gLabels,
-                    datasets: [{ data: gestionData.map(d => d[1]), backgroundColor: gColors, borderWidth: 0 }]
-                },
-                options: { 
-                    responsive: true, maintainAspectRatio: false, cutout: '60%',
-                    plugins: { legend: { position: 'right' } }
-                }
-            });
-
-            // 4. Tipo Dictamen
-            let dicData = aggregate(filteredData, 'Tipo Dictamen').slice(0, 8);
-            setupChart('chartDictamen', {
-                type: 'bar',
-                data: {
-                    labels: dicData.map(d => d[0]),
-                    datasets: [{ label: 'Casos', data: dicData.map(d => d[1]), backgroundColor: '#8b5cf6', borderRadius: 4 }]
-                },
-                options: { 
-                    indexAxis: 'y', responsive: true, maintainAspectRatio: false, 
-                    plugins: { legend: {display: false} },
-                    scales: { x: { ticks: { stepSize: 1, precision: 0 } } } 
-                }
-            });
-        }
-
-        function handleSort(col) {
-            if(currentSort.col === col) {
-                currentSort.asc = !currentSort.asc;
-            } else {
-                currentSort.col = col;
-                currentSort.asc = true;
+                });
+                ctx.restore();
             }
-            sortDataArray();
-            renderTable();
+        };
+
+        Chart.register(percentagePlugin);
+
+        function renderCharts() {
+            const aggregateStack = (groupByField, stackField, sortByX = null, limit = null) => {
+                const map = {}; const stackTypes = new Set();
+                currentData.forEach(row => {
+                    const gVal = groupByField === 'Fecha de Inicio' ? row[groupByField].ddmmm : row[groupByField];
+                    if(!gVal) return;
+                    const sVal = row[stackField] || 'N/A';
+                    stackTypes.add(sVal);
+                    if (!map[gVal]) map[gVal] = { total: 0 };
+                    map[gVal][sVal] = (map[gVal][sVal] || 0) + 1; map[gVal].total += 1;
+                });
+                let labels = Object.keys(map);
+                if (sortByX === 'chrono') labels.sort((a,b) => {
+                    const rA = currentData.find(r => r['Fecha de Inicio'].ddmmm === a);
+                    const rB = currentData.find(r => r['Fecha de Inicio'].ddmmm === b);
+                    return (rA ? rA['Fecha de Inicio'].ts : 0) - (rB ? rB['Fecha de Inicio'].ts : 0);
+                });
+                else if (sortByX === 'total_desc') labels.sort((a,b) => map[b].total - map[a].total);
+                if (limit) labels = labels.slice(0, limit);
+                let typesArr = Array.from(stackTypes);
+                if (typesArr.includes('Tradicional')) typesArr = ['Tradicional', ...typesArr.filter(t => t !== 'Tradicional')];
+                const datasets = typesArr.map(t => ({ label: t, data: labels.map(l => map[l][t] || 0), backgroundColor: getChartColors([t])[0] }));
+                return { labels, datasets };
+            };
+
+            const dataDias = aggregateStack('Fecha de Inicio', 'Tipo Gestión', 'chrono');
+            let optsDias = getChartOptions();
+            optsDias.scales = {
+                x: { stacked: true, grid: gridOptions, ticks: ticksOptions },
+                y: { stacked: true, grid: gridOptions, ticks: { display: false }, border: { display: false } }
+            };
+            createOrUpdateChart('chart-dias', { type: 'bar', data: dataDias, options: optsDias });
+
+            const dataEstatus = aggregateStack('Estatus', 'Tipo Gestión', 'total_desc');
+            let optsEstatus = getChartOptions();
+            optsEstatus.indexAxis = 'y';
+            optsEstatus.layout = { padding: { right: 50 } }; // Espacio para el %
+            optsEstatus.scales = {
+                x: { stacked: true, grid: gridOptions, ticks: { display: false }, border: { display: false } },
+                y: { stacked: true, grid: gridOptions, ticks: ticksOptions }
+            };
+            createOrUpdateChart('chart-estatus', { type: 'bar', data: dataEstatus, options: optsEstatus });
+
+            const dataCoord = aggregateStack('Coordinador', 'Tipo Gestión', 'total_desc', 10);
+            let optsCoord = getChartOptions();
+            optsCoord.indexAxis = 'y';
+            optsCoord.scales = {
+                x: { stacked: true, grid: gridOptions, ticks: { display: false }, border: { display: false } },
+                y: { stacked: true, grid: gridOptions, ticks: ticksOptions }
+            };
+            createOrUpdateChart('chart-coord', { type: 'bar', data: dataCoord, options: optsCoord });
+
+            const dataDict = aggregateStack('Tipo Dictamen', 'Tipo Gestión', 'total_desc', 8);
+            let optsDict = getChartOptions();
+            optsDict.indexAxis = 'y';
+            optsDict.scales = {
+                x: { stacked: true, grid: gridOptions, ticks: { display: false }, border: { display: false } },
+                y: { stacked: true, grid: gridOptions, ticks: ticksOptions }
+            };
+            createOrUpdateChart('chart-dictamen', { type: 'bar', data: dataDict, options: optsDict });
         }
 
-        function sortDataArray() {
-            const col = currentSort.col;
-            const dir = currentSort.asc ? 1 : -1;
-            filteredData.sort((a, b) => {
-                let va = a[col] || "";
-                let vb = b[col] || "";
-                
-                // Si la columna es una fecha, usa el timestamp para ordenar de forma cronológica
-                if (col.includes('Fecha')) {
-                    let ta = dateToTimestamp(va);
-                    let tb = dateToTimestamp(vb);
-                    if (ta && tb) return (ta - tb) * dir;
-                }
-
-                // Si son números
-                if(!isNaN(va) && !isNaN(vb) && va !== "" && vb !== "") {
-                    return (Number(va) - Number(vb)) * dir;
-                }
-                
-                // Texto convencional
-                return va.toString().localeCompare(vb.toString()) * dir;
-            });
-        }
-
-        function openModal(text, title) {
-            document.getElementById('modalTitle').innerText = title || 'Detalle';
-            document.getElementById('modalText').innerText = text;
-            document.getElementById('commentModal').classList.add('active');
-        }
-
-        function closeModal() {
-            document.getElementById('commentModal').classList.remove('active');
-        }
+        const tableColsAll = [
+            'Caso', 'Ref Base', 'Fecha de Inicio', 'Fecha de Última Modificación', 
+            'Nombre', 'Coordinador', 'Tipo Dictamen', 'Modo', 'Estatus', 'Tipo Gestión', 
+            'Pasó por IA', 'Proceso 72', 'Proceso 226', 'Proceso 222', 'Obs.', 'Comentarios Abogado',
+            'Cod. Desvío Dictamen IA', 'SDJv2_AperturaCuenta', 'SDJv2_AperturaCuenta_Arrendamiento',
+            'CronometroTareaAbogadoAsignar', 'CronometroTareaAbogado', 'Nivel Eficiencia',
+            'Tiempo Coordinador', 'TiempoAbogado'
+        ];
+        
+        const headerNames = { 'Fecha de Inicio': 'Inicio', 'Fecha de Última Modificación': 'Últ. Mod.' };
 
         function renderTable() {
-            const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = '';
+            const tableCols = showAdvancedMetrics ? tableColsAll : tableColsAll.filter(c => !advColumns.includes(c));
             
-            document.querySelectorAll('th').forEach(th => {
-                let text = th.innerText.replace(/ [↑↓↕]/, '');
-                if (th.getAttribute('onclick')) {
-                    if (text === currentSort.col) {
-                        th.innerText = text + (currentSort.asc ? ' ↑' : ' ↓');
-                        th.style.color = '#fff';
-                    } else {
-                        th.innerText = text + ' ↕';
-                        th.style.color = 'var(--text-muted)';
-                    }
-                }
+            const thead = document.querySelector('#dataTable thead');
+            thead.innerHTML = '';
+            const trHead = document.createElement('tr');
+            tableCols.forEach(col => {
+                const th = document.createElement('th');
+                let indicator = ' ↕';
+                if (sortCol === col) indicator = sortAsc ? ' ↑' : ' ↓';
+                th.innerText = (headerNames[col] || col) + indicator;
+                th.onclick = () => {
+                    if (sortCol === col) sortAsc = !sortAsc;
+                    else { sortCol = col; sortAsc = false; }
+                    renderTable();
+                };
+                trHead.appendChild(th);
             });
+            thead.appendChild(trHead);
 
-            const limit = 200;
-            const renderData = filteredData.slice(0, limit);
-
-            if(renderData.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="${EXPECTED_COLS.length}" style="text-align:center; padding: 2rem;">No se encontraron resultados para los filtros actuales.</td></tr>`;
-                document.getElementById('tableInfo').innerText = `Mostrando 0 de 0 registros.`;
-                return;
+            let renderData = [...currentData];
+            if (tableSearchQuery) {
+                const q = tableSearchQuery.toLowerCase();
+                renderData = renderData.filter(row => tableCols.some(col => {
+                    let val = row[col];
+                    if (val && typeof val === 'object' && val.str) val = val.str;
+                    return String(val).toLowerCase().includes(q);
+                }));
             }
 
-            renderData.forEach(row => {
-                const tr = document.createElement('tr');
-                
-                let isFinalizado = (row['Obs.'] || '').trim().toUpperCase() === 'FINALIZADO';
-                if(isFinalizado) {
-                    tr.classList.add('row-finalizado');
-                }
-                
-                EXPECTED_COLS.forEach(col => {
-                    const td = document.createElement('td');
-                    let val = row[col] || '';
+            if (sortCol) {
+                renderData.sort((a, b) => {
+                    let valA = a[sortCol]; let valB = b[sortCol];
+                    if (valA && typeof valA === 'object' && valA.ts !== undefined) valA = valA.ts;
+                    if (valB && typeof valB === 'object' && valB.ts !== undefined) valB = valB.ts;
                     
-                    // Condición para "Nombre" multi-línea ajustada a > 40 caracteres
-                    if (col === 'Nombre' && val.length > 40) {
-                        td.className = 'wrap-text';
-                    } else {
-                        td.className = 'nowrap';
-                    }
+                    valA = valA !== undefined && valA !== null ? valA : ''; 
+                    valB = valB !== undefined && valB !== null ? valB : '';
 
-                    if (col === 'Comentarios Abogado' || col === 'Obs.') {
-                        if (val) {
-                            let safeVal = val.replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/\\/g, '\\\\').replace(/\n/g, '\\n');
-                            let btnText = col === 'Obs.' ? 'Ver Obs.' : 'Ver Comentario';
-                            let modalTitle = col === 'Obs.' ? 'Observaciones' : 'Comentarios del Abogado';
-                            
-                            td.innerHTML = `<button class="btn-modal" title="${safeVal}" onclick="openModal('${safeVal}', '${modalTitle}')">${btnText}</button>`;
-                        } else {
-                            td.textContent = '-';
-                            td.style.color = isFinalizado ? '#ffffff' : 'var(--border)';
-                        }
-                    }
-                    else if(col.startsWith('Proceso ') && val.startsWith('http')) {
-                        td.innerHTML = `<a href="${val}" target="_blank" class="table-link">Ver enlace</a>`;
-                    } 
-                    else if(col === 'Tipo Gestión' && val) {
-                        let badgeClass = 'badge-default';
-                        let sl = val.toLowerCase();
-                        if(sl.includes('alta')) badgeClass = 'badge-alta';
-                        if(sl.includes('media')) badgeClass = 'badge-media';
-                        if(sl.includes('baja')) badgeClass = 'badge-baja';
-                        td.innerHTML = `<span class="badge ${badgeClass}">${val}</span>`;
-                    }
+                    const isTimeA = typeof valA === 'string' && /^\d+:\d{2}:\d{2}$/.test(valA.trim());
+                    const isTimeB = typeof valB === 'string' && /^\d+:\d{2}:\d{2}$/.test(valB.trim());
+
+                    if (isTimeA && isTimeB) { valA = timeToSeconds(valA); valB = timeToSeconds(valB); } 
                     else {
-                        td.textContent = val;
+                        const numA = Number(valA); const numB = Number(valB);
+                        if (!isNaN(numA) && !isNaN(numB) && valA !== '' && valB !== '') { valA = numA; valB = numB; } 
+                        else { valA = String(valA).toLowerCase(); valB = String(valB).toLowerCase(); }
                     }
+                    if (valA < valB) return sortAsc ? -1 : 1;
+                    if (valA > valB) return sortAsc ? 1 : -1;
+                    return 0;
+                });
+            }
+
+            // Aplicar Paginación
+            document.getElementById('recordCount').innerText = `${renderData.length} registros`;
+            let paginatedData = renderData;
+            const totalPages = rowsPerPage === 'all' ? 1 : Math.ceil(renderData.length / rowsPerPage) || 1;
+            
+            if (rowsPerPage !== 'all') {
+                if (currentPage > totalPages) currentPage = totalPages;
+                if (currentPage < 1) currentPage = 1;
+                const start = (currentPage - 1) * rowsPerPage;
+                paginatedData = renderData.slice(start, start + rowsPerPage);
+            }
+
+            const tbody = document.querySelector('#dataTable tbody');
+            tbody.innerHTML = '';
+            paginatedData.forEach(row => {
+                const tr = document.createElement('tr');
+                if (row['Obs.'] === 'FINALIZADO') tr.className = 'row-finalizado';
+
+                tableCols.forEach(col => {
+                    const td = document.createElement('td');
+                    let val = row[col];
+                    if (val && typeof val === 'object' && val.str) val = val.str;
+                    
+                    if (col === 'Nombre') {
+                        td.className = val.length > 40 ? 'col-multiline' : 'col-nowrap'; td.innerText = val;
+                    } else if (['Proceso 72', 'Proceso 226', 'Proceso 222'].includes(col)) {
+                        td.className = 'col-nowrap';
+                        if (val && val.trim() !== '' && val !== '0' && val !== 'N/A') {
+                            const btn = document.createElement('button');
+                            btn.className = 'btn-small'; btn.innerText = 'Ver enlace'; btn.onclick = () => window.open(val, '_blank');
+                            td.appendChild(btn);
+                        } else td.innerText = '-';
+                    } else if (col === 'Obs.' || col === 'Comentarios Abogado') {
+                        td.className = 'col-nowrap';
+                        if (val && val.trim() !== '') {
+                            const btn = document.createElement('button');
+                            btn.className = 'btn-small'; btn.innerText = col === 'Obs.' ? 'Ver Obs.' : 'Ver Comentario';
+                            btn.title = val; btn.onclick = () => openModal(col, val);
+                            td.appendChild(btn);
+                        } else td.innerText = '-';
+                    } else { td.className = 'col-nowrap'; td.innerText = val || '-'; }
                     tr.appendChild(td);
                 });
                 tbody.appendChild(tr);
             });
 
-            document.getElementById('tableInfo').innerText = `Mostrando ${renderData.length} de ${filteredData.length} registros.`;
+            // Actualizar controles de paginación
+            document.getElementById('pageInfo').innerText = `Página ${currentPage} de ${totalPages}`;
+            document.getElementById('btnPrevPage').disabled = currentPage === 1;
+            document.getElementById('btnNextPage').disabled = currentPage === totalPages || totalPages === 0;
+            document.getElementById('paginationContainer').style.display = rowsPerPage === 'all' ? 'none' : 'flex';
         }
 
-        // --- 7. EVENTOS DE ARCHIVO Y TOASTS ---
-        function showToast(msg, type='success') {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            toast.innerHTML = `<span>${type === 'success' ? '✅' : '❌'}</span> <span>${msg}</span>`;
-            container.appendChild(toast);
-            setTimeout(() => {
-                toast.style.animation = 'fadeOut 0.3s ease forwards';
-                setTimeout(() => toast.remove(), 300);
-            }, 4500);
+        document.getElementById('pageSizeSelect').addEventListener('change', (e) => {
+            rowsPerPage = e.target.value === 'all' ? 'all' : parseInt(e.target.value);
+            currentPage = 1; renderTable();
+        });
+        document.getElementById('btnPrevPage').addEventListener('click', () => { if(currentPage > 1) { currentPage--; renderTable(); }});
+        document.getElementById('btnNextPage').addEventListener('click', () => { currentPage++; renderTable(); });
+        document.getElementById('tableSearch').addEventListener('input', (e) => { tableSearchQuery = e.target.value; currentPage = 1; renderTable(); });
+
+        document.getElementById('btnExportar').addEventListener('click', () => {
+            if(currentData.length === 0) return alert('No hay datos para exportar');
+            const colsToExport = showAdvancedMetrics ? tableColsAll : tableColsAll.filter(c => !advColumns.includes(c));
+            let csvContent = '\uFEFF'; 
+            csvContent += colsToExport.map(c => `"${c}"`).join(',') + '\n';
+            currentData.forEach(row => {
+                let rowValues = colsToExport.map(col => {
+                    let val = row[col];
+                    if (val && typeof val === 'object' && val.str) val = val.str;
+                    val = String(val || '').replace(/"/g, '""'); 
+                    return `"${val}"`;
+                });
+                csvContent += rowValues.join(',') + '\n';
+            });
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob); link.download = "Exportacion_Dashboard.csv";
+            link.style.visibility = 'hidden'; document.body.appendChild(link); link.click(); document.body.removeChild(link);
+        });
+
+        function openModal(title, text) {
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalBody').innerText = text;
+            document.getElementById('globalModal').classList.add('active');
         }
+        function closeModal() { document.getElementById('globalModal').classList.remove('active'); }
+        document.getElementById('globalModal').addEventListener('click', (e) => { if(e.target === document.getElementById('globalModal')) closeModal(); });
+
+        const dropOverlay = document.getElementById('drop-overlay');
+        window.addEventListener('dragover', (e) => { e.preventDefault(); dropOverlay.classList.add('active'); });
+        dropOverlay.addEventListener('dragleave', (e) => { e.preventDefault(); dropOverlay.classList.remove('active'); });
+        dropOverlay.addEventListener('drop', (e) => {
+            e.preventDefault(); dropOverlay.classList.remove('active');
+            if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+        });
+        document.getElementById('fileInput').addEventListener('change', (e) => { if (e.target.files.length) handleFile(e.target.files[0]); });
 
         function handleFile(file) {
-            if (!file || !file.name.endsWith('.csv')) { showToast("Por favor selecciona un archivo .csv válido.", 'error'); return; }
             const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    let buffer = e.target.result;
-                    let decoder = new TextDecoder('utf-8', {fatal: true});
-                    let text = '';
-                    try {
-                         text = decoder.decode(buffer);
-                         if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
-                    } catch(err) {
-                         decoder = new TextDecoder('windows-1252');
-                         text = decoder.decode(buffer);
-                    }
-                    processCSV(text);
-                } catch (error) {
-                    console.error(error); showToast(`Error al procesar: ${error.message}`, 'error');
-                }
+            reader.onload = (e) => {
+                const buffer = e.target.result; let text = '';
+                try { const decoder = new TextDecoder("utf-8", { fatal: true }); text = decoder.decode(buffer); } 
+                catch (err) { const fallbackDecoder = new TextDecoder("windows-1252"); text = fallbackDecoder.decode(buffer); }
+                try { processData(text); } 
+                catch(err) { console.error(err); alert("Error procesando el archivo CSV. Revisa el formato."); }
             };
             reader.readAsArrayBuffer(file);
         }
 
-        document.getElementById('csvFileInput').addEventListener('change', (e) => { handleFile(e.target.files[0]); e.target.value = ''; });
-        const dropZone = document.getElementById('drop-zone');
-        window.addEventListener('dragenter', (e) => { e.preventDefault(); dropZone.classList.add('active'); });
-        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); });
-        dropZone.addEventListener('dragleave', (e) => { if (e.clientX === 0 || e.clientY === 0) dropZone.classList.remove('active'); });
-        dropZone.addEventListener('drop', (e) => { e.preventDefault(); dropZone.classList.remove('active'); if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]); });
-
-        // --- INICIO ---
-        window.onload = () => {
-            rawData = fallbackData;
-            initDashboard();
-            showToast("Dashboard cargado con datos de ejemplo. Sube tu CSV para analizar tus datos.", "success");
-        };
-
+        window.onload = () => processData(fallbackCSV);
     </script>
 </body>
 </html>
